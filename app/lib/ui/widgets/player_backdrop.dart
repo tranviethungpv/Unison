@@ -21,7 +21,7 @@ class PlayerBackdrop extends StatefulWidget {
     super.key,
     required this.coverUrl,
     this.glowHeight,
-    this.moving = false,
+    this.moving,
   });
 
   final String? coverUrl;
@@ -32,9 +32,10 @@ class PlayerBackdrop extends StatefulWidget {
   final double? glowHeight;
 
   /// The colours drift slowly, as the background of Now Playing does in Apple Music. Only while true, and not for
-  /// someone who asked the phone for less motion; while the phone is warm or saving power ([Calm]) they stand still
-  /// where they are.
-  final bool moving;
+  /// someone who asked the phone for less motion; while false, or while the phone is warm or saving power ([Calm]),
+  /// they ease to a stop and stand still where they are, so that pausing does not change the picture. Null for a page
+  /// that plays nothing (an album, an artist): the picture alone.
+  final bool? moving;
 
   @override
   State<PlayerBackdrop> createState() => _PlayerBackdropState();
@@ -50,10 +51,23 @@ class _PlayerBackdropState extends State<PlayerBackdrop> {
 
   /// How far the drift has gone, in turns, while [PlayerBackdrop.moving].
   final _phase = ValueNotifier<double>(0);
-  late final _drift = LowRateTimer(const Duration(milliseconds: 50), () {
-    // A turn in about a minute: slow enough to be felt rather than watched
-    _phase.value += 0.05 / 60;
-  });
+
+  /// Whether the drift should be going, and how far it has got up to speed, in ticks of [_drift] out of
+  /// [_rampTicks]: it slows to a stop and gathers pace again over about a second instead of halting.
+  bool _toMove = false;
+  int _pace = 0;
+  static const _rampTicks = 20;
+
+  late final LowRateTimer _drift = LowRateTimer(
+    const Duration(milliseconds: 50),
+    () {
+      _pace = (_pace + (_toMove ? 1 : -1)).clamp(0, _rampTicks);
+      final t = _pace / _rampTicks;
+      // A turn in about a minute at full speed: slow enough to be felt rather than watched
+      _phase.value += t * t * (3 - 2 * t) * 0.05 / 60;
+      if (_pace == 0 && !_toMove) _drift.run(false);
+    },
+  );
 
   /// The picture with its edges faded out, which the drifting copies are made of (a copy with straight edges would show
   /// them as it turns), and the picture it was made from.
@@ -156,10 +170,11 @@ class _PlayerBackdropState extends State<PlayerBackdrop> {
     ];
   }
 
-  /// Makes the faded picture once the drift is wanted and the picture is there, and again for the next picture.
+  /// Makes the faded picture once the picture is there, and again for the next picture: playing or paused, the full
+  /// player shows the copies over it.
   Future<void> _ensureSoft() async {
     final glow = _glow;
-    if (!widget.moving || glow == null || _softOf == glow) return;
+    if (widget.moving == null || glow == null || _softOf == glow) return;
     _softOf = glow;
     final soft = await _feather(glow);
     if (!mounted || _glow != glow) {
@@ -212,10 +227,10 @@ class _PlayerBackdropState extends State<PlayerBackdrop> {
   void didUpdateWidget(PlayerBackdrop old) {
     super.didUpdateWidget(old);
     if (widget.coverUrl != old.coverUrl) _load();
-    if (widget.moving && !old.moving) _ensureSoft();
   }
 
-  bool get _drifts => widget.moving && !MediaQuery.disableAnimationsOf(context);
+  bool get _drifts =>
+      widget.moving == true && !MediaQuery.disableAnimationsOf(context);
 
   void _load() {
     final url = widget.coverUrl;
@@ -243,7 +258,8 @@ class _PlayerBackdropState extends State<PlayerBackdrop> {
     final p = context.palette;
     final glow = _glow;
     final light = p.brightness == Brightness.light;
-    _drift.run(_drifts && glow != null && !Calm.on.value);
+    _toMove = _drifts && glow != null && !Calm.on.value;
+    _drift.run(_toMove || _pace > 0);
     final fraction = widget.glowHeight;
     if (fraction != null) return _topGlow(glow, fraction);
     return Stack(
@@ -266,9 +282,9 @@ class _PlayerBackdropState extends State<PlayerBackdrop> {
               : RepaintBoundary(
                   key: ValueKey(_shownFor),
                   child: CustomPaint(
-                    painter: _drifts
-                        ? _DriftPainter(glow, _soft, _phase, _frames)
-                        : _GlowPainter(glow),
+                    painter: widget.moving == null
+                        ? _GlowPainter(glow)
+                        : _DriftPainter(glow, _soft, _phase, _frames),
                     child: const SizedBox.expand(),
                   ),
                 ),

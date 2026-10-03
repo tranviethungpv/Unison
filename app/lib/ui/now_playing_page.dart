@@ -489,33 +489,35 @@ class _CoverArt extends StatelessWidget {
     }
     return ListenableBuilder(
       listenable: controller.playState,
-      builder: (context, _) => AnimatedScale(
-        // Paused covers shrink, like in Apple Music
-        scale: controller.isPlaying ? 1 : 0.86,
+      // Paused covers shrink, like in Apple Music; the shadow settles with the cover rather than jumping ahead of it
+      builder: (context, _) => TweenAnimationBuilder<double>(
+        tween: Tween(end: controller.isPlaying ? 1 : 0),
         duration: const Duration(milliseconds: 420),
         curve: Curves.easeOutBack,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(
-                  alpha: controller.isPlaying ? 0.28 : 0.14,
+        builder: (context, t, child) => Transform.scale(
+          scale: 0.86 + 0.14 * t,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.14 + 0.14 * t),
+                  blurRadius: 18 + 18 * t,
+                  offset: Offset(0, 8 + 10 * t),
                 ),
-                blurRadius: controller.isPlaying ? 36 : 18,
-                offset: Offset(0, controller.isPlaying ? 18 : 8),
-              ),
-            ],
-          ),
-          child: CoverSlot(
-            controller: sheet,
-            child: Artwork(
-              key: sheet.pageCover,
-              url: current.thumb,
-              size: size,
-              radius: 16,
-              sharp: true,
+              ],
             ),
+            child: child,
+          ),
+        ),
+        child: CoverSlot(
+          controller: sheet,
+          child: Artwork(
+            key: sheet.pageCover,
+            url: current.thumb,
+            size: size,
+            radius: 16,
+            sharp: true,
           ),
         ),
       ),

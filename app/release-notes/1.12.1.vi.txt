@@ -1,0 +1,3 @@
+Trình phát giữ một kiểu, dù đang phát hay tạm dừng
+- Tạm dừng không còn đổi nền trình phát sang một kiểu khác: các mảng màu chậm dần rồi đứng yên tại chỗ, và trôi tiếp từ đó khi phát lại.
+- Bóng của ảnh bìa giờ co và giãn cùng nhịp với ảnh, không còn nhảy trước.

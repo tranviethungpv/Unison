@@ -1,0 +1,3 @@
+One look in the player, playing or paused
+- Pausing no longer swaps the player's background for a different one: the colours slow to a stop where they are and pick up again from there when the song plays.
+- The cover's shadow now shrinks and grows together with the cover instead of jumping ahead of it.
