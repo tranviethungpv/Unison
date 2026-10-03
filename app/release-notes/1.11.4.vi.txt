@@ -1,0 +1,2 @@
+Hết đường kẻ mờ
+- Ở giao diện sáng, không còn đường kẻ mờ chạy ngang trang chủ và các trang chính ở chỗ vầng sáng đầu trang kết thúc.

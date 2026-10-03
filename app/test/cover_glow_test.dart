@@ -214,5 +214,24 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(find.byKey(const ValueKey('pink')), findsOneWidget);
     });
+
+    testWidgets('has a glow that ends on a whole device pixel', (tester) async {
+      // The phone this was seen on: 34% of 2340 device pixels is 795.6, part-way through a pixel
+      tester.view
+        ..devicePixelRatio = 2.625
+        ..physicalSize = const Size(1080, 2340);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: buildTheme(Palette.light),
+          home: const Scaffold(
+            body: PlayerBackdrop(coverUrl: null, glowHeight: 0.34),
+          ),
+        ),
+      );
+      final height = tester.getSize(find.byType(ShaderMask)).height;
+      expect(height * 2.625, closeTo((height * 2.625).roundToDouble(), 1e-6));
+      expect(height * 2.625, lessThanOrEqualTo(2340 * 0.34));
+    });
   });
 }

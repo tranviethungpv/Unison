@@ -1,0 +1,2 @@
+A faint line gone
+- In the light theme, a faint line no longer runs across the home page and the other main pages where the glow along the top ends.

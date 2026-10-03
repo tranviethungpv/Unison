@@ -216,34 +216,46 @@ extension on _PlayerBackdropState {
     final light = p.brightness == Brightness.light;
     return Align(
       alignment: Alignment.topCenter,
-      child: FractionallySizedBox(
-        widthFactor: 1,
-        heightFactor: fraction,
-        child: ShaderMask(
-          blendMode: BlendMode.dstIn,
-          shaderCallback: (rect) => const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            stops: [0, 0.5, 1],
-            // Soft even at its strongest, so that the titles over it stay easy to read
-            colors: [Color(0x99FFFFFF), Color(0x52FFFFFF), Color(0x00FFFFFF)],
-          ).createShader(rect),
-          child: ColorFiltered(
-            // The dark theme's picture is deep so that white text reads on all of the full player; as a glow it is
-            // only brought up a little
-            colorFilter: ColorFilter.matrix(
-              light ? _bright(1, 1.15) : _bright(1.15, 1.0),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          // A whole number of device pixels: where the mask ends part-way through one, that row keeps part of the
+          // picture and shows as a faint line across the page
+          final scale = MediaQuery.devicePixelRatioOf(context);
+          final height = (box.maxHeight * fraction * scale).floor() / scale;
+          return SizedBox(
+            width: double.infinity,
+            height: height,
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) => const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0, 0.5, 1],
+                // Soft even at its strongest, so that the titles over it stay easy to read
+                colors: [
+                  Color(0x99FFFFFF),
+                  Color(0x52FFFFFF),
+                  Color(0x00FFFFFF),
+                ],
+              ).createShader(rect),
+              child: ColorFiltered(
+                // The dark theme's picture is deep so that white text reads on all of the full player; as a glow it is
+                // only brought up a little
+                colorFilter: ColorFilter.matrix(
+                  light ? _bright(1, 1.15) : _bright(1.15, 1.0),
+                ),
+                child: SizedBox.expand(
+                  child: glow == null
+                      ? const SizedBox.shrink()
+                      : RepaintBoundary(
+                          key: ValueKey(_shownFor),
+                          child: CustomPaint(painter: _GlowPainter(glow)),
+                        ),
+                ),
+              ),
             ),
-            child: SizedBox.expand(
-              child: glow == null
-                  ? const SizedBox.shrink()
-                  : RepaintBoundary(
-                      key: ValueKey(_shownFor),
-                      child: CustomPaint(painter: _GlowPainter(glow)),
-                    ),
-            ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
