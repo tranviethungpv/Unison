@@ -229,7 +229,17 @@ void main() {
           ),
         ),
       );
-      final height = tester.getSize(find.byType(ShaderMask)).height;
+      // The box the glow is drawn in
+      final height = tester
+          .getSize(
+            find
+                .descendant(
+                  of: find.byType(PlayerBackdrop),
+                  matching: find.byType(SizedBox),
+                )
+                .first,
+          )
+          .height;
       expect(height * 2.625, closeTo((height * 2.625).roundToDouble(), 1e-6));
       expect(height * 2.625, lessThanOrEqualTo(2340 * 0.34));
     });

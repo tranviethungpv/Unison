@@ -125,7 +125,7 @@ class _BodyState extends State<_Body> {
       children: [
         // The colours drift while the song plays, as Apple Music's do
         ListenableBuilder(
-          listenable: _c.player,
+          listenable: _c.playState,
           builder: (context, _) => PlayerBackdrop(
             coverUrl: widget.current.thumb,
             moving: _c.isPlaying,
@@ -274,7 +274,7 @@ class _TransportRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: controller.player,
+    listenable: controller.playState,
     builder: (context, _) => Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -394,16 +394,21 @@ class _WidePanel extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      MarqueeText(current.title, style: theme.titleMedium),
+                      MarqueeText(
+                        current.title,
+                        style: theme.titleMedium,
+                        rounds: MarqueeText.playerRounds,
+                      ),
                       MarqueeText(
                         current.artist,
                         style: theme.bodyMedium?.copyWith(color: p.primary),
+                        rounds: MarqueeText.playerRounds,
                       ),
                     ],
                   ),
                 ),
                 ListenableBuilder(
-                  listenable: controller.player,
+                  listenable: controller.playState,
                   builder: (context, _) => PlayPauseButton(
                     playing: controller.isPlaying,
                     starting: controller.isStarting,
@@ -483,7 +488,7 @@ class _CoverArt extends StatelessWidget {
       );
     }
     return ListenableBuilder(
-      listenable: controller.player,
+      listenable: controller.playState,
       builder: (context, _) => AnimatedScale(
         // Paused covers shrink, like in Apple Music
         scale: controller.isPlaying ? 1 : 0.86,
@@ -552,10 +557,15 @@ class _PanelStage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MarqueeText(current.title, style: theme.titleMedium),
+                    MarqueeText(
+                      current.title,
+                      style: theme.titleMedium,
+                      rounds: MarqueeText.playerRounds,
+                    ),
                     MarqueeText(
                       current.artist,
                       style: theme.bodyMedium?.copyWith(color: p.primary),
+                      rounds: MarqueeText.playerRounds,
                     ),
                   ],
                 ),
@@ -596,7 +606,11 @@ class _TitleRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              MarqueeText(current.title, style: theme.headlineSmall),
+              MarqueeText(
+                current.title,
+                style: theme.headlineSmall,
+                rounds: MarqueeText.playerRounds,
+              ),
               const SizedBox(height: 2),
               MarqueeText(
                 current.artist,
@@ -604,6 +618,7 @@ class _TitleRow extends StatelessWidget {
                   color: p.primary,
                   fontWeight: FontWeight.w500,
                 ),
+                rounds: MarqueeText.playerRounds,
               ),
             ],
           ),

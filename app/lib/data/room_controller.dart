@@ -25,7 +25,10 @@ class Notice {
 /// Room structure notifies listeners rarely; the player position lives in [player] and is
 /// extrapolated by [positionMs], so nothing has to rebuild sixty times a second.
 class RoomController extends ChangeNotifier {
-  RoomController(this._backend, {this._recents});
+  RoomController(this._backend, {this._recents}) {
+    player.addListener(_updatePlayState);
+    addListener(_updatePlayState);
+  }
 
   final Backend _backend;
   final RecentRooms? _recents;
@@ -45,6 +48,15 @@ class RoomController extends ChangeNotifier {
     const PlayerPosition(),
   );
   final Stopwatch _sinceSample = Stopwatch();
+
+  /// [isPlaying] and [isStarting], told only when one of them changes: for what shows a play button or moves while a
+  /// song plays. Listening to [player] instead draws the screen again at every position the phone sends, for nothing.
+  final ValueNotifier<(bool playing, bool starting)> playState = ValueNotifier((
+    false,
+    false,
+  ));
+
+  void _updatePlayState() => playState.value = (isPlaying, isStarting);
 
   /// While the user's seek is in flight the bar stays where they dropped it.
   int? _seekTarget;
@@ -439,6 +451,7 @@ class RoomController extends ChangeNotifier {
     _messages.close();
     _notices.close();
     player.dispose();
+    playState.dispose();
     invite.dispose();
     setup.dispose();
     super.dispose();

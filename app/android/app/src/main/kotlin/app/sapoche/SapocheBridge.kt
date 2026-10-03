@@ -244,10 +244,15 @@ class SapocheBridge(
                     }
                     launch { group.sleep.state.collect { emit(UiJson.sleep(it)) } }
                     launch {
-                        // No ticking at all while the screen is off
+                        // No ticking at all while the screen is off, and none while the song stands still: a pause, a
+                        // seek or a song that ends is pushed at once by the listener below, and a screen that comes
+                        // back is told where things are
                         shown.collectLatest { on ->
+                            var told = false
                             while (on) {
-                                emit(UiJson.position(group.view.value, group.playerInfo()))
+                                val info = group.playerInfo()
+                                if (!told || info.playing) emit(UiJson.position(group.view.value, info))
+                                told = true
                                 delay(POSITION_TICK_MS)
                             }
                         }
@@ -317,8 +322,9 @@ class SapocheBridge(
                 "autoplay" to prefs.getBoolean("autoplay", true),
             )
             "setupLink" -> return Config.setupLink()
+            "cacheFolder" -> return activity.cacheDir.path
             "smooth" -> {
-                display.smooth(call.argument<Boolean>("on") == true)
+                display.pace(call.argument<String>("pace") ?: "free")
                 return null
             }
             "pickOutput" -> {

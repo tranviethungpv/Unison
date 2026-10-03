@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sapoche/data/calm.dart';
 import 'package:sapoche/ui/widgets/marquee_text.dart';
 
 const _long =
@@ -9,6 +10,7 @@ Future<void> _pump(
   WidgetTester tester,
   String text, {
   bool reduceMotion = false,
+  int? rounds,
 }) async {
   tester.platformDispatcher.accessibilityFeaturesTestValue =
       FakeAccessibilityFeatures(disableAnimations: reduceMotion);
@@ -16,7 +18,9 @@ Future<void> _pump(
   await tester.pumpWidget(
     MaterialApp(
       home: Scaffold(
-        body: Center(child: SizedBox(width: 120, child: MarqueeText(text))),
+        body: Center(
+          child: SizedBox(width: 120, child: MarqueeText(text, rounds: rounds)),
+        ),
       ),
     ),
   );
@@ -100,6 +104,45 @@ void main() {
       ),
     );
     await tester.pump();
+    expect(_moved(tester), 0);
+  });
+
+  testWidgets(
+    'with a number of rounds, the line rests at its start after them',
+    (tester) async {
+      await _pump(tester, _long, rounds: 1);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(seconds: 2));
+      expect(_moved(tester), greaterThan(0));
+
+      await tester.pump(const Duration(seconds: 30));
+      expect(_moved(tester), 0);
+      await tester.pump(const Duration(seconds: 30));
+      expect(_moved(tester), 0);
+      expect(tester.hasRunningAnimations, isFalse);
+    },
+  );
+
+  testWidgets('rests while the phone is warm, and goes again once it is not', (
+    tester,
+  ) async {
+    addTearDown(() => Calm.on.value = false);
+    Calm.on.value = true;
+    await _pump(tester, _long);
+    await tester.pump(const Duration(seconds: 5));
+    expect(_moved(tester), 0);
+    expect(tester.hasRunningAnimations, isFalse);
+
+    Calm.on.value = false;
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 2));
+    expect(_moved(tester), greaterThan(0));
+
+    // Warm again half way: it goes back to its start and stays there
+    Calm.on.value = true;
+    await tester.pump();
+    expect(_moved(tester), 0);
+    await tester.pump(const Duration(seconds: 10));
     expect(_moved(tester), 0);
   });
 }

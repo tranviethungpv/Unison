@@ -101,6 +101,28 @@ void main() {
     },
   );
 
+  test('tells what shows a play button only when playing starts or stops, not at every position', () async {
+    var told = 0;
+    controller.playState.addListener(() => told++);
+    for (final ms in [1000, 2000, 3000]) {
+      backend.emit(
+        PositionEvent(
+          PlayerPosition(playing: true, positionMs: ms, durationMs: 60000),
+        ),
+      );
+      await settle();
+    }
+    expect(told, 1);
+    expect(controller.playState.value, (true, false));
+
+    backend.emit(
+      const PositionEvent(PlayerPosition(positionMs: 3000, durationMs: 60000)),
+    );
+    await settle();
+    expect(told, 2);
+    expect(controller.playState.value, (false, false));
+  });
+
   test('position never runs past the end of the song', () async {
     backend.emit(
       const PositionEvent(

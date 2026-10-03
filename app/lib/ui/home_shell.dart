@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import 'setup_dialog.dart';
 import 'search_page.dart';
 import 'settings_page.dart';
 import 'widgets/artwork.dart';
+import 'widgets/cached_cover.dart';
 import 'widgets/glass.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/page_width.dart';
@@ -53,13 +55,22 @@ class HomeShell extends StatefulWidget {
     return size.width < 840 ? ShellLayout.rail : ShellLayout.sidebar;
   }
 
-  /// Bottom padding lists need so their last row can scroll clear of the bars.
+  /// Bottom padding lists need so their last row can scroll clear of the bars. A phone's bars are folded by the time a
+  /// page has been scrolled to its end, so it is their folded height (the row of tabs above the system's bar) and a
+  /// little room: made for the open bars, the end of every page was a long empty band under the folded ones. Scrolled
+  /// back up, the open mini player covers the last rows, as glass that shows them.
   static double bottomInsetOf(BuildContext context) =>
       switch (layoutOf(context)) {
-        ShellLayout.bars => isWide(context) ? 128 : 176,
+        ShellLayout.bars =>
+          math.max(MediaQuery.viewPaddingOf(context).bottom, _barsBottom) +
+              tabHeightOf(context) +
+              16,
         ShellLayout.rail => 120,
         ShellLayout.sidebar => 112,
       };
+
+  /// The least room under a phone's bars, where the system has no bar of its own.
+  static const _barsBottom = 10.0;
 
   /// Side of a cover in a row of cards: larger where the window is.
   static double cardSizeOf(BuildContext context) => switch (layoutOf(context)) {
@@ -217,11 +228,11 @@ class _HomeShellState extends State<HomeShell> with TickerProviderStateMixin {
     if (url == null || url == _precachedCover || !mounted) return;
     _precachedCover = url;
     precacheImage(
-      NetworkImage(sharpThumbnail(url)),
+      CachedCover(sharpThumbnail(url)),
       context,
       // No enlarged picture for this one: the player will fall back to the original
       onError: (_, _) =>
-          precacheImage(NetworkImage(url), context, onError: (_, _) {}),
+          precacheImage(CachedCover(url), context, onError: (_, _) {}),
     );
   }
 
@@ -939,7 +950,7 @@ class _Bars extends StatelessWidget {
             // Clear of the system's own bar
             SafeArea(
               top: false,
-              minimum: const EdgeInsets.only(bottom: 10),
+              minimum: const EdgeInsets.only(bottom: HomeShell._barsBottom),
               child: SizedBox(
                 height: row + tabs,
                 child: LayoutBuilder(

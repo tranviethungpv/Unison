@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/theme.dart';
+import 'cached_cover.dart';
 
 /// The largest picture YouTube keeps for a thumbnail address, or the address itself when it is not
 /// one we know how to enlarge. Search results carry a picture only about 400 pixels tall, and a
@@ -71,13 +72,14 @@ class Artwork extends StatelessWidget {
     String address,
     Widget placeholder, {
     ImageErrorWidgetBuilder? onError,
-  }) => Image.network(
-    address,
+  }) => Image(
+    image: ResizeImage.resizeIfNeeded(
+      // A wide picture cropped square would come out short of pixels if it were decoded by width
+      sharp ? null : (size * MediaQuery.devicePixelRatioOf(context)).round(),
+      null,
+      CachedCover(address),
+    ),
     fit: BoxFit.cover,
-    // A wide picture cropped square would come out short of pixels if it were decoded by width
-    cacheWidth: sharp
-        ? null
-        : (size * MediaQuery.devicePixelRatioOf(context)).round(),
     errorBuilder: onError ?? (_, _, _) => placeholder,
     frameBuilder: (context, child, frame, sync) => sync
         ? child

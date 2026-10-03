@@ -116,7 +116,11 @@ class MiniPlayerCapsule extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MarqueeText(current.title, style: theme.titleSmall),
+                    MarqueeText(
+                      current.title,
+                      style: theme.titleSmall,
+                      rounds: MarqueeText.barRounds,
+                    ),
                     if (fading > 0)
                       Align(
                         alignment: Alignment.topLeft,
@@ -130,6 +134,7 @@ class MiniPlayerCapsule extends StatelessWidget {
                             style: theme.bodySmall?.copyWith(
                               color: p.textSecondary,
                             ),
+                            rounds: MarqueeText.barRounds,
                           ),
                         ),
                       ),
@@ -137,7 +142,7 @@ class MiniPlayerCapsule extends StatelessWidget {
                 ),
               ),
               ListenableBuilder(
-                listenable: controller.player,
+                listenable: controller.playState,
                 builder: (context, _) => PlayPauseButton(
                   playing: controller.isPlaying,
                   starting: controller.isStarting,

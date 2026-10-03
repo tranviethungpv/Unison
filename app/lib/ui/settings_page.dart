@@ -1080,7 +1080,7 @@ class _SettingsList extends StatelessWidget {
       // last button (Install, Download) can be reached however long the text above it is
       padding: EdgeInsets.fromLTRB(
         16,
-        MediaQuery.paddingOf(context).top + 8,
+        ScrollEdge.topOf(context) + 8,
         16,
         HomeShell.bottomInsetOf(context),
       ),

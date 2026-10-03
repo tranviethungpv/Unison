@@ -1,0 +1,8 @@
+Mát máy hơn, đỡ tốn pin hơn, giao diện vẫn như cũ
+- Màn hình không còn được vẽ lại khi không có gì chuyển động. Trước đây tên bài dài chạy chữ trong mini player khiến máy vẽ gần 100 khung hình mỗi giây, kể cả khi tạm dừng; giờ chữ chạy hai lượt rồi dừng, và chạy lại khi sang bài mới.
+- Những thứ tự chuyển động, như chữ chạy hay nền trôi của trình phát, hiển thị ở 60 Hz; cuộn và vuốt vẫn mượt ở tốc độ cao nhất của màn hình.
+- Vầng sáng đầu trang, nền trôi của trình phát và các thẻ mix được dựng một lần thay vì ở mỗi khung hình, nên cuộn không còn bị khựng.
+- Ảnh bìa được lưu trên máy thay vì tải lại mỗi lần mở app.
+- Khi máy nóng hoặc đang tiết kiệm pin, các thanh chuyển sang nền mờ đặc thay cho kính và màn hình giữ ở 60 Hz, như iPhone khi bật Chế độ nguồn điện thấp.
+- Trên iPhone, màn hình khoá chỉ cập nhật khi có thay đổi thay vì hai lần mỗi giây khi ở trong phòng, và tên bài trong trình phát đầy đủ dừng chạy sau ba lượt.
+- Bớt khoảng trống thừa ở đầu và cuối các trang.

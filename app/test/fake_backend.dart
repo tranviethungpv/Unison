@@ -4,6 +4,7 @@ import 'package:sapoche/data/backend.dart';
 import 'package:sapoche/data/models.dart';
 import 'package:sapoche/data/music_models.dart';
 import 'package:sapoche/data/song_key.dart';
+import 'package:sapoche/frame_boost.dart';
 
 /// In-memory [Backend] that records calls and lets a test push state.
 class FakeBackend implements Backend {
@@ -39,6 +40,9 @@ class FakeBackend implements Backend {
 
   @override
   Future<String?> setupLink() async => setupLinkValue;
+
+  @override
+  Future<String?> cacheFolder() async => null;
 
   @override
   Future<String> createRoom(String name) async {
@@ -535,7 +539,7 @@ class FakeBackend implements Backend {
   bool updateOnWifi = true;
 
   @override
-  Future<void> setSmooth(bool on) => _record('smooth $on');
+  Future<void> setDisplayPace(DisplayPace pace) => _record('pace ${pace.name}');
 
   @override
   Future<void> setLanguage(String code) => _record('setLanguage $code');

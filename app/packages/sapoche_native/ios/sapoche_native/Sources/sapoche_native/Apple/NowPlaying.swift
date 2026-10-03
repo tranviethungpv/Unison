@@ -14,6 +14,11 @@ final class NowPlaying {
     private var artworkTask: Task<Void, Never>?
     private var artworkCache: [String: UIImage] = [:]
 
+    /// What the lock screen was last given and when. The system moves the time on by itself while the rate says the song
+    /// plays, so the same song, state and length at the time they should be at are not given again: in a room the
+    /// player changes twice a second (its drift), and each of those woke the lock screen for nothing, screen off or on.
+    private var given: (signature: String, positionMs: Int64, at: TimeInterval)?
+
     init(controller: GroupController, engine: PlayerEngine) {
         self.controller = controller
         self.engine = engine
@@ -67,6 +72,7 @@ final class NowPlaying {
             center.nowPlayingInfo = nil
             shownVideoId = nil
             artwork = nil
+            given = nil
             return
         }
         let info = engine.playerInfo()
@@ -75,6 +81,14 @@ final class NowPlaying {
             artwork = nil
             loadArtwork(item)
         }
+        let duration = info.durationMs > 0 ? info.durationMs : item.durMs
+        let signature = "\(item.videoId)|\(item.title)|\(item.artist)|\(info.playing)|\(duration)|\(artwork != nil)"
+        let now = ProcessInfo.processInfo.systemUptime
+        if let given, given.signature == signature {
+            let expected = given.positionMs + (info.playing ? Int64((now - given.at) * 1000) : 0)
+            if abs(expected - info.positionMs) < 1500 { return }
+        }
+        given = (signature: signature, positionMs: info.positionMs, at: now)
         var fields: [String: Any] = [
             MPMediaItemPropertyTitle: item.title,
             MPMediaItemPropertyArtist: item.artist,
@@ -82,7 +96,6 @@ final class NowPlaying {
             MPNowPlayingInfoPropertyPlaybackRate: info.playing ? 1.0 : 0.0,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
         ]
-        let duration = info.durationMs > 0 ? info.durationMs : item.durMs
         if duration > 0 { fields[MPMediaItemPropertyPlaybackDuration] = Double(duration) / 1000 }
         if let artwork { fields[MPMediaItemPropertyArtwork] = artwork }
         center.nowPlayingInfo = fields

@@ -258,7 +258,7 @@ class _Overview extends StatelessWidget {
       title: S.tabLibrary,
       child: ListView(
         padding: EdgeInsets.only(
-          top: MediaQuery.paddingOf(context).top,
+          top: ScrollEdge.topOf(context),
           bottom: HomeShell.bottomInsetOf(context),
         ),
         children: [
@@ -635,7 +635,7 @@ class _TrackList extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
                     20,
-                    MediaQuery.paddingOf(context).top + 8,
+                    ScrollEdge.topOf(context) + 8,
                     20,
                     10,
                   ),

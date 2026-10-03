@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../data/calm.dart';
 import '../../theme/palette.dart';
 import '../../theme/theme.dart';
 
@@ -14,6 +15,10 @@ import '../../theme/theme.dart';
 /// on the phone while scrolling, three separate ones took 10 ms to draw a frame; grouped under the [BackdropGroup] of
 /// the home screen, so that they share one reading of what is behind them, they take 4 ms, against 2.5 ms without
 /// any glass.
+///
+/// While the phone is warm or saving power ([Calm]) the bars are a near solid veil instead, as iOS turns its glass
+/// solid in Low Power Mode: nothing behind them is read or blurred, which is half of what the screen costs as a page
+/// scrolls.
 class Glass extends StatelessWidget {
   const Glass({super.key, required this.child, required this.borderRadius});
 
@@ -25,30 +30,35 @@ class Glass extends StatelessWidget {
 
   static final _blur = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
 
-  /// The veil over the blur.
-  static Color tintOf(Palette p) {
+  /// The veil over the blur; with [calm], the veil without one.
+  static Color tintOf(Palette p, {bool calm = false}) {
     final light = p.brightness == Brightness.light;
     return Color.alphaBlend(
       p.text.withValues(alpha: light ? 0.06 : 0.08),
-      p.base.withValues(alpha: light ? 0.55 : 0.40),
+      p.base.withValues(alpha: calm ? 0.94 : (light ? 0.55 : 0.40)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: BackdropFilter.grouped(
-        filter: _blur,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tintOf(p),
-            borderRadius: borderRadius,
-            border: Border.all(color: p.text.withValues(alpha: 0.09)),
+    return ValueListenableBuilder(
+      valueListenable: Calm.on,
+      // Touches ripple on the glass, not under it
+      child: Material(type: MaterialType.transparency, child: child),
+      builder: (context, calm, child) => ClipRRect(
+        borderRadius: borderRadius,
+        child: BackdropFilter.grouped(
+          enabled: !calm,
+          filter: _blur,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: tintOf(p, calm: calm),
+              borderRadius: borderRadius,
+              border: Border.all(color: p.text.withValues(alpha: 0.09)),
+            ),
+            child: child,
           ),
-          // Touches ripple on the glass, not under it
-          child: Material(type: MaterialType.transparency, child: child),
         ),
       ),
     );

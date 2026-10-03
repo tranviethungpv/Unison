@@ -148,7 +148,10 @@ final class Bridge {
         }
         visible = value
         controller.setUiVisible(value)
-        if value { emitState() }
+        if value {
+            emitState()
+            emitPosition()
+        }
     }
 
     /// Handles an invitation, `sapoche://join/CODE` or the https link of the server's invitation page, and a setup link,
@@ -212,13 +215,15 @@ final class Bridge {
         // Play, pause and seek should show at once instead of at the next tick
         observing.collect(controller.playerChanged) { [weak self] _ in self?.emitPosition() }
         observing.launch { [weak self] in
-            // No ticking at all while the screen is off
+            // No ticking at all while the screen is off, and none while the song stands still: a pause, a seek or a
+            // song that ends is pushed at once by `playerChanged`, and a screen that comes back is told where things are
             while let self {
-                if self.visible { self.emitPosition() }
+                if self.controller.playerInfo().playing { self.emitPosition() }
                 guard await self.time.wait(ms: Self.positionTickMs) else { return }
             }
         }
         emitState()
+        emitPosition()
     }
 
     func stop() {
@@ -285,6 +290,8 @@ final class Bridge {
             if let key = args["key"] as? String { config.key = key.trimmingCharacters(in: .whitespacesAndNewlines) }
             config.save(to: prefs)
             return nil
+        case "cacheFolder":
+            return FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.path
         case "smooth", "updateCheck", "updateAllowInstalls":
             return nil // the display and updates are the system's business on iOS
         case "updateDownload", "updateInstall":

@@ -239,6 +239,21 @@ final class BridgeTests: XCTestCase {
         XCTAssertEqual(JSON(last["durationMs"]).int64, 200_000)
     }
 
+    func testTheCacheFolderIsNamed() async throws {
+        let folder = try await call("cacheFolder") as? String
+        XCTAssertFalse(folder?.isEmpty ?? true)
+    }
+
+    func testNoPositionIsSentWhileTheSongStandsStill() async throws {
+        _ = try await call("add", song(1))
+        await time.advance(1500)
+        _ = try await call("pause")
+        await time.advance(100)
+        let paused = events.filter { $0["type"] as? String == "position" }.count
+        await time.advance(5000)
+        XCTAssertEqual(events.filter { $0["type"] as? String == "position" }.count, paused)
+    }
+
     func testNothingIsSentWhileTheScreenIsOff() async throws {
         bridge.setVisible(false)
         let before = events.count

@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 
+import 'widgets/cached_cover.dart';
+
 /// The soft, blurred picture of a cover that lights the full player's background, the way Apple Music does: the
 /// cover itself, enlarged, blurred and more vivid. In the dark theme it is darkened until white text reads well on
 /// any colours; in the light theme it is faded towards white until dark text does.
@@ -76,7 +78,7 @@ class CoverGlow {
   static Future<ui.Image?> _load(String url) async {
     final completer = Completer<ui.Image?>();
     final stream = ResizeImage(
-      NetworkImage(url),
+      CachedCover(url),
       width: _side,
       height: _side,
       allowUpscaling: false,

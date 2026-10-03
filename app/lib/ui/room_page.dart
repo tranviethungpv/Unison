@@ -59,7 +59,7 @@ class _RoomPageState extends State<RoomPage> {
             ),
             slivers: [
               SliverToBoxAdapter(
-                child: SizedBox(height: MediaQuery.paddingOf(context).top),
+                child: SizedBox(height: ScrollEdge.topOf(context)),
               ),
               SliverToBoxAdapter(child: _Header(snapshot: snapshot)),
               SliverToBoxAdapter(child: LinkBanner(link: snapshot.link)),
@@ -113,7 +113,7 @@ class _RoomPageState extends State<RoomPage> {
             controller,
             current,
             ListenableBuilder(
-              listenable: controller.player,
+              listenable: controller.playState,
               builder: (context, _) => TrackTile(
                 track: current,
                 subtitle: _byline(snapshot, current),

@@ -1,0 +1,8 @@
+Cooler and kinder to the battery, with the same look
+- The screen is no longer drawn when nothing on it moves. A long song title scrolling in the mini player used to keep the phone drawing nearly 100 frames a second, even while paused; it now goes round twice and rests, and again for the next song.
+- What moves by itself, like a scrolling title or the drifting background of the player, is shown at 60 Hz; scrolling and swiping still get the screen's fastest rate.
+- The glow along the top of the pages, the drifting background of the player and the mix cards are made once instead of in every frame, so scrolling no longer drops frames.
+- Covers are kept on the phone instead of downloaded again each time the app opens.
+- When the phone is warm or saving battery, the bars become a plain veil instead of glass and the screen stays at 60 Hz, as an iPhone does in Low Power Mode.
+- On iPhone, the lock screen is only updated when something changes, instead of twice a second in a room, and the title in the full player rests after three rounds.
+- Less empty space at the top and at the bottom of the pages.

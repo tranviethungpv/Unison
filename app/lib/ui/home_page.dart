@@ -17,6 +17,7 @@ import 'rooms_sheet.dart';
 import 'scope.dart';
 import 'settings_page.dart';
 import 'widgets/artwork.dart';
+import 'widgets/cached_cover.dart';
 import 'widgets/play_actions.dart';
 import 'widgets/play_row.dart';
 import 'widgets/scroll_edge.dart';
@@ -30,7 +31,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final library = AppScope.of(context).library;
     // The page scrolls up under the status bar, where its glass edge blurs it away
-    final top = MediaQuery.paddingOf(context).top;
+    final top = ScrollEdge.topOf(context);
     return ScrollEdge(
       title: _Header.greeting(DateTime.now().hour),
       child: ListenableBuilder(
@@ -418,79 +419,93 @@ class _Hero extends StatelessWidget {
                     bottom: 8,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: BackdropFilter(
-                        filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                        child: ColoredBox(
-                          color: Colors.black.withValues(alpha: 0.42),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (label)
+                      child: Stack(
+                        children: [
+                          // The picture under the words, blurred: made once, where a backdrop blur would blur it again
+                          // in every frame the screen draws
+                          if (mix.seed.thumb case final thumb?)
+                            Positioned(
+                              left: -8,
+                              bottom: -(8 + (box.maxWidth - height) / 2),
+                              width: box.maxWidth,
+                              height: box.maxWidth,
+                              child: _BlurredCover(
+                                url: thumb,
+                                sigma: 18 / box.maxWidth,
+                              ),
+                            ),
+                          ColoredBox(
+                            color: Colors.black.withValues(alpha: 0.42),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (label)
+                                          Text(
+                                            S.mixedForYou.toUpperCase(),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.labelSmall?.copyWith(
+                                              color: Colors.white70,
+                                              letterSpacing: 0.8,
+                                            ),
+                                          ),
                                         Text(
-                                          S.mixedForYou.toUpperCase(),
+                                          S.mixOf(mix.artist),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: theme.labelSmall?.copyWith(
-                                            color: Colors.white70,
-                                            letterSpacing: 0.8,
-                                          ),
-                                        ),
-                                      Text(
-                                        S.mixOf(mix.artist),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.titleSmall?.copyWith(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                // Not a button of its own: the whole card is
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 11,
-                                      vertical: 5,
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.play_arrow_rounded,
-                                          size: 16,
-                                          color: Color(0xFF22161A),
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          S.play,
-                                          style: theme.labelMedium?.copyWith(
-                                            color: const Color(0xFF22161A),
-                                            fontSize: 13,
+                                          style: theme.titleSmall?.copyWith(
+                                            color: Colors.white,
+                                            fontSize: 16,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  // Not a button of its own: the whole card is
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 11,
+                                        vertical: 5,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.play_arrow_rounded,
+                                            size: 16,
+                                            color: Color(0xFF22161A),
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Text(
+                                            S.play,
+                                            style: theme.labelMedium?.copyWith(
+                                              color: const Color(0xFF22161A),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
@@ -502,6 +517,120 @@ class _Hero extends StatelessWidget {
       },
     );
   }
+}
+
+/// A cover blurred into a small picture once and stretched over its box, cropped square as [Artwork] crops it.
+class _BlurredCover extends StatefulWidget {
+  const _BlurredCover({required this.url, required this.sigma});
+
+  final String url;
+
+  /// How strong the blur is, as a fraction of the side of the box.
+  final double sigma;
+
+  @override
+  State<_BlurredCover> createState() => _BlurredCoverState();
+}
+
+class _BlurredCoverState extends State<_BlurredCover> {
+  /// Side of the blurred picture, in pixels; it is stretched, and stretching a blurred picture stays smooth.
+  static const _side = 64;
+
+  ui.Image? _image;
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve(sharpThumbnail(widget.url));
+  }
+
+  @override
+  void didUpdateWidget(_BlurredCover old) {
+    super.didUpdateWidget(old);
+    if (old.url != widget.url || old.sigma != widget.sigma) {
+      _resolve(sharpThumbnail(widget.url));
+    }
+  }
+
+  @override
+  void dispose() {
+    _stop();
+    _image?.dispose();
+    super.dispose();
+  }
+
+  void _stop() {
+    final listener = _listener;
+    if (listener != null) _stream?.removeListener(listener);
+    _stream = null;
+    _listener = null;
+  }
+
+  /// Reads the picture at [address], small; the cover's own address when the enlarged one is not there, as [Artwork]
+  /// does.
+  void _resolve(String address) {
+    _stop();
+    final stream = ResizeImage(
+      CachedCover(address),
+      height: _side,
+      allowUpscaling: false,
+    ).resolve(ImageConfiguration.empty);
+    final url = widget.url;
+    final sigma = widget.sigma;
+    final listener = ImageStreamListener(
+      (info, _) async {
+        final blurred = await _blur(info.image, sigma * _side);
+        info.image.dispose();
+        if (!mounted || widget.url != url || widget.sigma != sigma) {
+          blurred.dispose();
+          return;
+        }
+        final old = _image;
+        setState(() => _image = blurred);
+        old?.dispose();
+      },
+      onError: (_, _) {
+        if (mounted && address != url && widget.url == url) _resolve(url);
+      },
+    );
+    _stream = stream;
+    _listener = listener;
+    stream.addListener(listener);
+  }
+
+  static Future<ui.Image> _blur(ui.Image source, double sigma) async {
+    final side = math.min(source.width, source.height).toDouble();
+    final recorder = ui.PictureRecorder();
+    Canvas(recorder).drawImageRect(
+      source,
+      Rect.fromCenter(
+        center: Offset(source.width / 2, source.height / 2),
+        width: side,
+        height: side,
+      ),
+      Rect.fromLTWH(0, 0, _side.toDouble(), _side.toDouble()),
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..imageFilter = ui.ImageFilter.blur(
+          sigmaX: sigma,
+          sigmaY: sigma,
+          tileMode: TileMode.mirror,
+        ),
+    );
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(_side, _side);
+    picture.dispose();
+    return image;
+  }
+
+  @override
+  Widget build(BuildContext context) => RawImage(
+    image: _image,
+    fit: BoxFit.fill,
+    filterQuality: FilterQuality.high,
+  );
 }
 
 /// Said while nothing is known about the person yet.

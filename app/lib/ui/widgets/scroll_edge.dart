@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../data/calm.dart';
 import '../../theme/theme.dart';
 import '../home_shell.dart';
 import 'glass.dart';
@@ -30,12 +31,34 @@ class ScrollEdge extends StatefulWidget {
   /// Height of the strip below the status bar.
   static const height = 44.0;
 
+  /// How far a page inside a [ScrollEdge] pads its top: by the status bar where it scrolls up under it (a tablet, a
+  /// wide screen), and by nothing on a phone, where the edge has already put it below the status bar. Read from the
+  /// page's own context, which is above the edge.
+  static double topOf(BuildContext context) =>
+      HomeShell.layoutOf(context) == ShellLayout.bars
+      ? 0
+      : MediaQuery.paddingOf(context).top;
+
   @override
   State<ScrollEdge> createState() => _ScrollEdgeState();
 }
 
 class _ScrollEdgeState extends State<ScrollEdge> {
   bool _shown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Calm.on.addListener(_calmChanged);
+  }
+
+  @override
+  void dispose() {
+    Calm.on.removeListener(_calmChanged);
+    super.dispose();
+  }
+
+  void _calmChanged() => setState(() {});
 
   bool _onScroll(ScrollNotification notification) {
     if (notification.depth == 0 && notification.metrics.axis == Axis.vertical) {
@@ -60,7 +83,9 @@ class _ScrollEdgeState extends State<ScrollEdge> {
       );
     }
     final p = context.palette;
-    final tint = Glass.tintOf(p);
+    // Glass as the bars are, solid while the phone is warm
+    final calm = Calm.on.value;
+    final tint = Glass.tintOf(p, calm: calm);
     return NotificationListener<ScrollNotification>(
       onNotification: _onScroll,
       child: Stack(
@@ -82,6 +107,7 @@ class _ScrollEdgeState extends State<ScrollEdge> {
                   if (t == 0) return const SizedBox.shrink();
                   return ClipRect(
                     child: BackdropFilter.grouped(
+                      enabled: !calm,
                       filter: ui.ImageFilter.blur(
                         sigmaX: Glass.sigma * t,
                         sigmaY: Glass.sigma * t,

@@ -6,6 +6,7 @@ import '../../theme/theme.dart';
 import '../widgets/queue_actions.dart';
 import '../widgets/play_actions.dart';
 import '../widgets/track_menu.dart';
+import '../widgets/cached_cover.dart';
 import '../widgets/track_tile.dart';
 
 /// A heading and rows of songs that a touch plays, each with the usual "more" menu.
@@ -105,10 +106,12 @@ class ArtistRow extends StatelessWidget {
                                 color: p.primary,
                               ),
                             )
-                          : Image.network(
-                              artist.thumb!,
+                          : Image(
+                              image: ResizeImage(
+                                CachedCover(artist.thumb!),
+                                width: 276,
+                              ),
                               fit: BoxFit.cover,
-                              cacheWidth: 276,
                               errorBuilder: (_, _, _) =>
                                   ColoredBox(color: p.primaryContainer),
                             ),

@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../frame_boost.dart';
+
 import 'models.dart';
 import 'music_models.dart';
 import 'update_info.dart';
@@ -96,6 +98,9 @@ abstract class Backend {
   /// A link that sets up another phone with this one's server and key (Android, which has them built in); null when
   /// there is no server. It holds the secret, so it is only for the person to see.
   Future<String?> setupLink();
+
+  /// The app's cache folder, which the system may empty when it needs the room.
+  Future<String?> cacheFolder();
 
   Future<String> createRoom(String name);
   Future<void> join(String code, String name);
@@ -286,8 +291,9 @@ abstract class Backend {
   /// Writes a line in the diary the log shows, for what only the screen can tell (how fast it was drawn).
   Future<void> note(String line);
 
-  /// Asks the display for its fastest refresh rate while the screen is moving, and gives it back when it is still.
-  Future<void> setSmooth(bool on);
+  /// Asks the display for its fastest refresh rate while someone moves the screen, its normal one while the screen moves
+  /// by itself, and nothing when it is still.
+  Future<void> setDisplayPace(DisplayPace pace);
 
   /// Tells the native side which language the app speaks, for the few texts it shows itself.
   Future<void> setLanguage(String code);
@@ -360,6 +366,9 @@ class NativeBackend implements Backend {
 
   @override
   Future<String?> setupLink() => _call<String>('setupLink');
+
+  @override
+  Future<String?> cacheFolder() => _call<String>('cacheFolder');
 
   @override
   Future<String> createRoom(String name) async =>
@@ -760,7 +769,8 @@ class NativeBackend implements Backend {
   }
 
   @override
-  Future<void> setSmooth(bool on) => _call<void>('smooth', {'on': on});
+  Future<void> setDisplayPace(DisplayPace pace) =>
+      _call<void>('smooth', {'pace': pace.name});
 
   @override
   Future<void> setLanguage(String code) =>

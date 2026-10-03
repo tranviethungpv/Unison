@@ -105,7 +105,11 @@ class PlayerBarBody extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        MarqueeText(current.title, style: theme.titleSmall),
+                        MarqueeText(
+                          current.title,
+                          style: theme.titleSmall,
+                          rounds: MarqueeText.barRounds,
+                        ),
                         MarqueeText(
                           controller.snapshot.solo
                               ? '${current.artist} · ${S.onYourOwn}'
@@ -113,6 +117,7 @@ class PlayerBarBody extends StatelessWidget {
                           style: theme.bodySmall?.copyWith(
                             color: p.textSecondary,
                           ),
+                          rounds: MarqueeText.barRounds,
                         ),
                       ],
                     ),
@@ -124,7 +129,7 @@ class PlayerBarBody extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ListenableBuilder(
-                          listenable: controller.player,
+                          listenable: controller.playState,
                           builder: (context, _) => Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
